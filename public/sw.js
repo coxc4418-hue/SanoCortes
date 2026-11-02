@@ -1,5 +1,5 @@
 // SanoCortes — Service Worker (PWA, funcionamiento sin conexión)
-const VERSION = 'sanocortes-v1.0.2';
+const VERSION = 'sanocortes-v1.0.3';
 const SDK = 'https://www.gstatic.com/firebasejs/10.14.1/';
 const VIEWS = ['admin', 'agenda', 'booking', 'card', 'cash', 'clients', 'dashboard', 'inventory', 'invoices', 'kiosk', 'loyalty', 'pos', 'queue', 'reports', 'search', 'settings', 'team'];
 const SHELL = [

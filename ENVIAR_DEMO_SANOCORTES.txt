@@ -1,0 +1,14 @@
+💈 *SanoCortes* — el sistema para tu barbería
+
+Agenda por barbero, reservas en línea las 24 horas, sala de espera con turnos y tiempo estimado, la receta del corte de cada cliente, sellos de fidelidad y club de cortes, avisos por WhatsApp de "te toca corte", caja y el pago a tus barberos (comisión, alquiler de silla o sueldo) sin sacar cuentas a mano. Cobras en la moneda de tu país.
+
+▶️ Mira cómo funciona (video de 8 minutos):
+https://sano-cortes.web.app/tutorial/sano-cortes-tutorial.mp4
+
+🧪 Pruébalo gratis 30 minutos, sin registrarte:
+https://sano-cortes.web.app
+Toca "Probar demo gratis" (PIN de la demo: 1234).
+
+📲 Se instala como app en el teléfono, la tablet o la computadora, sin tiendas ni descargas.
+
+¿Te interesa? Escríbenos por WhatsApp: +58 422-190 6045

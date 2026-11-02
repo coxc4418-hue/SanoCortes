@@ -96,7 +96,13 @@ export function mount(el) {
     const online = appts.filter((x) => x.source === 'online').length;
     const origin = {}; appts.forEach((x) => add(origin, x.kind === 'turno' ? 'Llegó sin cita' : x.source === 'online' ? 'Reserva en línea' : 'Agendada en el local'));
     // Ocupación de sillas: minutos atendidos / minutos disponibles de cada barbero
-    appts.filter((x) => x.status === 'terminada').forEach((x) => { const pb = perBarber[x.barberId]; if (pb) pb.minutes += Number(x.minutes) || 30; });
+    // (cada corte cobrado: los minutos de su cita o, si se cobró directo, la duración de sus servicios)
+    const apptMin = new Map(appts.map((x) => [x.id, Number(x.minutes) || 0]));
+    const svcMin = new Map(store.settings.services.map((sv) => [sv.name, Number(sv.minutes) || 30]));
+    visits.forEach((v) => {
+      const pb = perBarber[v.barberId]; if (!pb) return;
+      pb.minutes += (v.apptId && apptMin.get(v.apptId)) || (v.services || []).reduce((t, n) => t + (svcMin.get(n) || 30), 0) || 30;
+    });
     for (const k of days) {
       const wd = fromKey(k).getDay();
       store.settings.barbers.forEach((br) => { const h = barberHours(br, store.settings.schedule, wd); if (h) perBarber[br.id].avail += h.close - h.open - (h.breakFrom != null && h.breakTo != null ? h.breakTo - h.breakFrom : 0); });
