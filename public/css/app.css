@@ -1856,6 +1856,40 @@ button.style-card { display: flex; gap: 8px; align-items: center; cursor: pointe
   .tvk-head { flex-wrap: wrap; padding: 12px 16px; } .tvk-main { padding: 14px 16px; }
   .tvk-clock b { font-size: 24px; } .tvk-chair-who { font-size: 22px; } .tvk-flash b { font-size: 40px; } .tvk-flash > div { padding: 26px 22px; margin: 16px; }
 }
+/* Pantalla de turnos en teléfono: marca + reloj arriba, selector de modo a todo el ancho */
+@media (max-width: 640px) {
+  .tvk-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "brand clock" "modes modes"; gap: 10px 12px; padding: 10px 14px; }
+  .tvk-brand { grid-area: brand; gap: 10px; }
+  .tvk-brand img { width: 40px; height: 40px; border-radius: 12px; flex: none; }
+  .tvk-brand > div { min-width: 0; }
+  .tvk-brand b { font-size: 17px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tvk-brand span { font-size: 12px; display: block; }
+  .tvk-self .kiosk-pad button { height: 60px; font-size: 26px; } .tvk-self .kiosk-display { height: 56px; font-size: 30px; }
+  .tvk-clock { grid-area: clock; } .tvk-clock b { font-size: 22px; } .tvk-clock span { font-size: 11px; white-space: nowrap; }
+  .tvk-modes { grid-area: modes; width: 100%; }
+  .tvk-modes button { flex: 1; justify-content: center; padding: 9px 8px; font-size: 14px; white-space: nowrap; }
+  .tvk-main { padding: 12px 14px 70px; }
+  .tvk-chairs { grid-template-columns: 1fr; gap: 10px; }
+  .tvk-chair { padding: 14px; border-radius: 18px; gap: 6px; }
+  .tvk-chair-b { font-size: 16px; min-width: 0; } .tvk-chair-b .bdot { width: 32px; height: 32px; font-size: 14px; flex: none; }
+  .tvk-chair-who { font-size: 20px; flex-wrap: wrap; }
+  .tvk-chair-st { font-size: 13px; flex-wrap: wrap; }
+  .tvk-queue { padding: 14px; border-radius: 18px; }
+  .tvk-queue li { font-size: 16px; gap: 8px; padding: 8px 10px; } .tvk-queue li em { min-width: 0; font-size: 13px; }
+  .tvk-no { min-width: 44px; height: 34px; font-size: 17px; }
+  .tvk-foot { padding: 10px 14px; font-size: 13px; }
+  .tvk-self h1 { font-size: 26px; } .tvk-self p { font-size: 15px; }
+  .tvk-svcs, .tvk-barbers { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tvk-svc { padding: 12px 10px; } .tvk-barber { padding: 14px 8px; } .tvk-barber .bdot { width: 46px; height: 46px; }
+  .tvk-done .turn-no { font-size: 96px; }
+}
+/* Teléfono acostado: cabecera compacta para dejar espacio a los turnos */
+@media (max-height: 500px) and (orientation: landscape) {
+  .tvk-head { padding: 8px 18px; gap: 12px; } .tvk-brand img { width: 38px; height: 38px; border-radius: 11px; }
+  .tvk-brand b { font-size: 18px; } .tvk-clock b { font-size: 22px; } .tvk-modes button { padding: 6px 12px; }
+  .tvk-main { padding: 12px 18px 64px; } .tvk-chair { padding: 12px 14px; gap: 4px; } .tvk-chair-who { font-size: 20px; }
+  .tvk-chairs { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+}
 @media (max-width: 640px) {
   .agx-wrap { max-height: calc(100vh - 220px); }
   .agx { grid-template-columns: 44px repeat(var(--cols), minmax(132px, 1fr)); min-width: calc(44px + var(--cols) * 132px); }
