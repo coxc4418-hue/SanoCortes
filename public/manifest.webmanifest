@@ -1,0 +1,88 @@
+{
+  "id": "/",
+  "name": "SanoCortes — Gestión profesional para barberías",
+  "short_name": "SanoCortes",
+  "description": "Agenda por barbero con reservas en línea, sala de espera con turnos, ficha de cada corte, sellos y club, WhatsApp, cobros con propinas, pagos a barberos, caja y reportes para barberías.",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "orientation": "any",
+  "background_color": "#0d0906",
+  "theme_color": "#120c07",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": [
+    "business",
+    "lifestyle",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Agenda",
+      "short_name": "Agenda",
+      "url": "/#/agenda",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Sala de espera",
+      "short_name": "Turnos",
+      "url": "/#/turnos",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Cobrar",
+      "short_name": "Cobrar",
+      "url": "/#/cobrar",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Pantalla de turnos",
+      "short_name": "Pantalla",
+      "url": "/#/pantalla",
+      "icons": [
+        {
+          "src": "/assets/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

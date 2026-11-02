@@ -1,0 +1,159 @@
+rules_version = '2';
+
+// SanoCortes — Reglas de seguridad multisede
+// - Cada sede (cuenta) solo accede a sus propios datos en tenants/{uid}.
+// - El administrador general crea, congela, renueva y elimina sedes.
+// - Una sede congelada o con el plan vencido no puede leer ni escribir sus datos.
+// - Las demos (sesión anónima) caducan a los 30 minutos: después solo pueden borrar sus datos.
+// - cards/{código}: tarjeta digital pública del cliente (nombre corto, sellos, club, próxima cita); se lee por código exacto, sin listar.
+// - booking/{slug}: página pública de reservas (servicios, barberos, horario y horas ocupadas, nunca nombres); se lee por slug exacto.
+// - requests/{id}: solicitudes de la reserva en línea; cualquiera puede crearlas (validadas), solo la barbería dueña las ve y las borra.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return signedIn()
+        && request.auth.token.email == 'admin@sanocortes.app'
+        && request.auth.token.firebase.sign_in_provider == 'password';
+    }
+
+    function isAnon() {
+      return signedIn() && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    function isOwner(tenantId) {
+      return signedIn() && request.auth.uid == tenantId;
+    }
+
+    function tenantData(tenantId) {
+      return get(/databases/$(database)/documents/tenants/$(tenantId)).data;
+    }
+
+    // Activa = no congelada, no eliminada y con el plan vigente (si tiene fecha de vencimiento)
+    function tenantActive(tenantId) {
+      let t = tenantData(tenantId);
+      let paid = t.get('paidUntil', null);
+      return t.get('active', true) == true
+        && t.get('deleted', false) != true
+        && (paid == null || paid > request.time);
+    }
+
+    // Una demo solo puede crear/modificar datos mientras no haya vencido
+    function demoValid(tenantId) {
+      let t = tenantData(tenantId);
+      return t.get('demo', false) != true || t.expiresAt > request.time;
+    }
+
+    function ownerCanWrite() {
+      return signedIn() && tenantActive(request.auth.uid) && demoValid(request.auth.uid);
+    }
+
+    // Usuario → correo (para iniciar sesión con el nombre de usuario)
+    match /usernames/{username} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isSuperAdmin();
+    }
+
+    // Avisos generales del administrador para todas las sedes
+    match /system/{docId} {
+      allow read: if signedIn();
+      allow write: if isSuperAdmin();
+    }
+
+    // Tarjeta digital pública del cliente
+    match /cards/{code} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isSuperAdmin()
+        || (signedIn() && request.resource.data.tenantId == request.auth.uid && ownerCanWrite());
+      allow update: if isSuperAdmin()
+        || (signedIn() && resource.data.tenantId == request.auth.uid
+            && request.resource.data.tenantId == request.auth.uid && ownerCanWrite());
+      allow delete: if isSuperAdmin() || (signedIn() && resource.data.tenantId == request.auth.uid);
+    }
+
+    // Página pública de reservas de cada barbería
+    match /booking/{slug} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if isSuperAdmin()
+        || (signedIn() && slug.matches('^[a-z0-9-]{4,60}$')
+            && request.resource.data.tenantId == request.auth.uid && ownerCanWrite());
+      allow update: if isSuperAdmin()
+        || (signedIn() && resource.data.tenantId == request.auth.uid
+            && request.resource.data.tenantId == request.auth.uid && ownerCanWrite());
+      allow delete: if isSuperAdmin() || (signedIn() && resource.data.tenantId == request.auth.uid);
+    }
+
+    // Solicitudes de la reserva en línea
+    function validRequest(d) {
+      return d.keys().hasOnly(['tenantId', 'slug', 'name', 'phone', 'note', 'serviceIds', 'serviceNames', 'minutes', 'estimate', 'barberId', 'date', 'time', 'status', 'createdAt'])
+        && d.keys().hasAll(['tenantId', 'slug', 'name', 'phone', 'serviceIds', 'date', 'time', 'status', 'createdAt'])
+        && d.tenantId is string && d.tenantId.size() > 0 && d.tenantId.size() <= 128
+        && d.slug is string && d.slug.size() <= 60
+        && d.name is string && d.name.size() >= 2 && d.name.size() <= 60
+        && d.phone is string && d.phone.size() >= 7 && d.phone.size() <= 20
+        && d.get('note', '') is string && d.get('note', '').size() <= 140
+        && d.serviceIds is list && d.serviceIds.size() >= 1 && d.serviceIds.size() <= 6
+        && d.get('serviceNames', '') is string && d.get('serviceNames', '').size() <= 200
+        && d.get('minutes', 30) is int && d.get('minutes', 30) >= 5 && d.get('minutes', 30) <= 600
+        && d.get('estimate', 0) is number
+        && d.get('barberId', 'any') is string && d.get('barberId', 'any').size() <= 40
+        && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.time is string && d.time.matches('^[0-9]{2}:[0-9]{2}$')
+        && d.status == 'nueva'
+        && d.createdAt is string && d.createdAt.size() <= 30;
+    }
+    function bookingOpenFor(d) {
+      let path = /databases/$(database)/documents/booking/$(d.slug);
+      return d.slug.size() >= 4 && exists(path)
+        && get(path).data.tenantId == d.tenantId
+        && get(path).data.get('enabled', true) == true;
+    }
+    match /requests/{id} {
+      allow create: if validRequest(request.resource.data)
+        && (bookingOpenFor(request.resource.data)
+            || (signedIn() && request.resource.data.tenantId == request.auth.uid && ownerCanWrite()));
+      allow get, list: if isSuperAdmin() || (signedIn() && resource.data.tenantId == request.auth.uid);
+      allow update: if false;
+      allow delete: if isSuperAdmin() || (signedIn() && resource.data.tenantId == request.auth.uid);
+    }
+
+    match /tenants/{tenantId} {
+      allow get: if isSuperAdmin() || isOwner(tenantId);
+      allow list: if isSuperAdmin();
+
+      // Las sedes las crea el administrador. Una sesión anónima solo puede crear su demo (máx. 31 min).
+      allow create: if isSuperAdmin()
+        || (isOwner(tenantId) && isAnon()
+            && request.resource.data.demo == true
+            && request.resource.data.active == true
+            && request.resource.data.ownerUid == request.auth.uid
+            && request.resource.data.expiresAt <= request.time + duration.value(31, 'm'));
+
+      // La sede solo puede cambiar su nombre visible; estado, plan y vencimiento los maneja el administrador.
+      allow update: if isSuperAdmin()
+        || (isOwner(tenantId) && tenantActive(tenantId)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name', 'updatedAt']));
+
+      allow delete: if isSuperAdmin() || (isOwner(tenantId) && resource.data.get('demo', false) == true);
+
+      // Datos de la barbería: clientes, citas, cortes, club, ventas, pagos a barberos, caja, productos...
+      match /{collection}/{docId} {
+        allow read: if isSuperAdmin() || (isOwner(tenantId) && tenantActive(tenantId));
+        allow delete: if isSuperAdmin() || (isOwner(tenantId) && (tenantActive(tenantId) || tenantData(tenantId).get('demo', false) == true));
+        allow create, update: if isSuperAdmin() || (isOwner(tenantId) && tenantActive(tenantId) && demoValid(tenantId));
+      }
+    }
+
+    // Cualquier otra ruta queda bloqueada.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
