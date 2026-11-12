@@ -182,9 +182,9 @@ export async function seedDemoActivity() {
     docs.push(['visits', 'demo_v' + seq, { clientId: h.id, clientName: h.name, date, dayKey: dayKey(h.date), barberId: h.barberId, barberName: store.barber(h.barberId)?.name || '', services: h.services.map((s) => s.name), total: round2(h.price), saleId, saleNumber: number, apptId: null, style: ST[h.styleKey], by: 'demo' }]);
   }
   await store.commit(nb);
-  for (let i = 0; i < docs.length; i += 400) {
+  for (let i = 0; i < docs.length; i += 80) {
     const bb = store.batch();
-    docs.slice(i, i + 400).forEach(([col, id, data]) => bb.set(store.ref(col, id), data));
+    docs.slice(i, i + 80).forEach(([col, id, data]) => bb.set(store.ref(col, id), data));
     await store.commit(bb);
   }
   b = store.batch();
@@ -300,9 +300,9 @@ export async function purgeTenant(tenantId, onlyDemo = true, slug = '') {
   try {
     const snap = await getDocs(collection(db, 'tenants', tenantId, 'clients'));
     const codes = snap.docs.map((d) => d.data().cardCode).filter(Boolean);
-    for (let i = 0; i < codes.length; i += 400) {
+    for (let i = 0; i < codes.length; i += 80) {
       const b = writeBatch(db);
-      codes.slice(i, i + 400).forEach((c) => b.delete(doc(db, 'cards', c)));
+      codes.slice(i, i + 80).forEach((c) => b.delete(doc(db, 'cards', c)));
       await b.commit().catch((e) => console.warn('[purge] tarjetas', e?.code || e));
     }
   } catch (e) { console.warn('[purge] tarjetas', e?.code || e); }
@@ -313,14 +313,14 @@ export async function purgeTenant(tenantId, onlyDemo = true, slug = '') {
   } catch (e) { console.warn('[purge] reservas', e?.code || e); }
   try {
     const rq = await getDocs(query(collection(db, 'requests'), where('tenantId', '==', tenantId)));
-    for (let i = 0; i < rq.docs.length; i += 400) { const b = writeBatch(db); rq.docs.slice(i, i + 400).forEach((d) => b.delete(d.ref)); await b.commit(); }
+    for (let i = 0; i < rq.docs.length; i += 80) { const b = writeBatch(db); rq.docs.slice(i, i + 80).forEach((d) => b.delete(d.ref)); await b.commit(); }
   } catch (e) { console.warn('[purge] solicitudes', e?.code || e); }
   for (const c of DATA_COLLECTIONS) {
     try {
       const snap = await getDocs(collection(db, 'tenants', tenantId, c));
-      for (let i = 0; i < snap.docs.length; i += 400) {
+      for (let i = 0; i < snap.docs.length; i += 80) {
         const b = writeBatch(db);
-        snap.docs.slice(i, i + 400).forEach((d) => b.delete(d.ref));
+        snap.docs.slice(i, i + 80).forEach((d) => b.delete(d.ref));
         await b.commit();
       }
     } catch (e) { console.warn('[purge]', c, e?.code || e); }
