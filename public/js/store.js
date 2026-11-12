@@ -2,7 +2,7 @@
 import {
   db, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, query, where, writeBatch, increment
 } from './firebase.js';
-import { addDays, startOfDay, sha256, toast, todayKey, dayKey, applyLocale, scaleUSD, fromKey } from './utils.js';
+import { addDays, startOfDay, sha256, toast, todayKey, dayKey, applyLocale, setFx, scaleUSD, fromKey } from './utils.js';
 import { DEFAULT_SERVICES, DEFAULT_PLANS, LOYALTY_DEFAULT, barberHours, toMin, nowMin } from './barber.js';
 
 export const DAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -44,6 +44,7 @@ export const clientBadge = (s) => {
 };
 
 const DEFAULT_SETTINGS = {
+  fx: { enabled: false, sym: 'Bs', name: 'Bolívares', rate: 0, updatedAt: '' },
   businessName: '',
   rif: '',
   phone: '',
@@ -152,6 +153,8 @@ class Store {
     listen(this.ref('config', 'settings'), 'settings', (s) => {
       this.settings = { ...DEFAULT_SETTINGS, ...(s.exists() ? s.data() : {}) };
       applyLocale(this.settings.country || 'VE', this.settings.currency);
+      this.settings.fx = { ...DEFAULT_SETTINGS.fx, ...(this.settings.fx || {}) };
+      setFx(this.settings.fx);
       for (const k of ['categories', 'services']) if (!Array.isArray(this.settings[k]) || !this.settings[k].length) this.settings[k] = DEFAULT_SETTINGS[k];
       for (const k of ['barbers', 'plans']) if (!Array.isArray(this.settings[k])) this.settings[k] = [];
       for (const k of ['schedule', 'agenda', 'booking', 'loyalty']) this.settings[k] = { ...DEFAULT_SETTINGS[k], ...(this.settings[k] || {}) };
@@ -205,6 +208,7 @@ class Store {
 
   async saveSettings(patch) {
     Object.assign(this.settings, patch);
+    if (patch.fx) setFx(this.settings.fx);
     await this.save('config', 'settings', patch, true);
     this.emit('settings');
   }

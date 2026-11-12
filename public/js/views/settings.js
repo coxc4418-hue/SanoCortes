@@ -3,12 +3,13 @@ import { store, updateTenant, DAYS, getBookingPage } from '../store.js';
 import { requirePin, changePassword, authErrorMessage, session } from '../auth.js';
 import { esc, num, toast, parseNum, setBusy, toggleTheme, download, nowISO, round2, openModal, shortId, confirmDialog, emptyState, loc, flagImg, usd, scaleUSD } from '../utils.js';
 import { icon } from '../icons.js';
+import { fxSectionHTML, bindFxSection } from '../bcv.js';
 import { openCountryPicker, salesWa, SALES_PHONE_FMT, BOOK_URL, qrDataURL } from '../shared.js';
 import { isStandalone, bindInstallButtons } from '../install.js';
 import { SERVICE_CATEGORIES, DEFAULT_SERVICES, DEFAULT_PLANS, BARBER_COLORS, LOYALTY_DEFAULT } from '../barber.js';
 import { slugify, publishBooking, resetPublished } from '../ops.js';
 
-const SECTIONS = { negocio: 'Barbería', horario: 'Horario y agenda', reserva: 'Reserva en línea', servicios: 'Servicios', club: 'Club', fidelidad: 'Fidelidad', recibos: 'Recibos', seguridad: 'Seguridad', apps: 'Instalar y respaldo' };
+const SECTIONS = { negocio: 'Barbería', moneda: 'Moneda y tasa', horario: 'Horario y agenda', reserva: 'Reserva en línea', servicios: 'Servicios', club: 'Club', fidelidad: 'Fidelidad', recibos: 'Recibos', seguridad: 'Seguridad', apps: 'Instalar y respaldo' };
 const sw = (name, on, title, sub) => `<label class="check box box-white"><span class="switch"><input type="checkbox" name="${name}" ${on ? 'checked' : ''}><span></span></span><span><b>${title}</b><br><small class="muted">${sub}</small></span></label>`;
 
 export function mount(el, { params = {}, navigate }) {
@@ -195,6 +196,8 @@ export function mount(el, { params = {}, navigate }) {
         toast('Recibos guardados');
       };
     }
+
+    if (sec === 'moneda') { body.innerHTML = fxSectionHTML(); bindFxSection(body, render); }
 
     if (sec === 'seguridad') {
       body.innerHTML = `<div class="grid-2">

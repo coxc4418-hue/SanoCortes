@@ -1,6 +1,6 @@
 // SanoCortes — Componentes compartidos: país y moneda, QR, WhatsApp al cliente e impresión
 import { store } from './store.js';
-import { openModal, toast, num, esc, fmtDateTime, fmtDate, setBusy, usd, bs, methodLabel, qtyFmt, printHTML, todayKey, waLink, COUNTRIES, loc, flagImg, fmtTime, fromKey, dayKey, addDays } from './utils.js';
+import { openModal, toast, num, esc, fmtDateTime, fmtDate, setBusy, usd, bs, fx, methodLabel, qtyFmt, printHTML, todayKey, waLink, COUNTRIES, loc, flagImg, fmtTime, fromKey, dayKey, addDays } from './utils.js';
 import { icon } from './icons.js';
 import { styleLine } from './barber.js';
 
@@ -42,7 +42,7 @@ export function openCountryPicker({ force = false } = {}) {
     m.el.querySelector('[data-ok]').onclick = async (e) => {
       if (!picked) return;
       setBusy(e.currentTarget, true, 'Guardando…');
-      try { await store.setCountry(picked, cur); toast(`Listo: trabajarás en ${loc().curName} (${loc().sym})`); m.close(); }
+      try { await store.setCountry(picked, cur); await (await import('./bcv.js')).onCountryChanged().catch(() => {}); toast(`Listo: trabajarás en ${loc().curName} (${loc().sym})`); m.close(); }
       catch (ex) { m.el.querySelector('[data-err]').textContent = ex.message; setBusy(e.currentTarget, false); }
     };
     draw();
@@ -141,6 +141,8 @@ function headerHTML() {
 /** Recibo de cobro (ticket o carta) */
 export function receiptHTML(sale) {
   const s = store.settings;
+  const rate = Number(sale.fxRate) || 0; const F = fx();
+  const eq = (v) => (rate > 0 && F ? `${F.sym} ${num(v * rate, 2)}` : '');
   const ivaPct = Number(s.iva) || 0;
   const iva = ivaPct > 0 ? (sale.total - sale.total / (1 + ivaPct / 100)) : 0;
   const pays = (sale.payments || []).map((p) => `<tr><td colspan="2">${esc(methodLabel(p.method))}</td><td class="r">${usd(p.amount)}</td></tr>`).join('');
@@ -163,6 +165,7 @@ export function receiptHTML(sale) {
       <tr><td colspan="2">Subtotal</td><td class="r">${usd(sale.subtotal)}</td></tr>
       ${sale.discount > 0 ? `<tr><td colspan="2">Descuento</td><td class="r">-${usd(sale.discount)}</td></tr>` : ''}
       <tr class="big"><td colspan="2">TOTAL</td><td class="r">${usd(sale.total)}</td></tr>
+      ${eq(sale.total) ? `<tr><td colspan="2">Equivalente</td><td class="r">${eq(sale.total)}</td></tr><tr><td colspan="3" class="sm">Tasa: 1 ${esc(loc().sym)} = ${num(rate, 2)} ${esc(F.sym)}</td></tr>` : ''}
       ${iva > 0.009 ? `<tr><td colspan="2">Impuesto ${num(ivaPct, 0)}% incluido</td><td class="r">${usd(iva)}</td></tr>` : ''}
     </table>
     ${pays ? `<div class="hr"></div><table>${pays}</table>` : ''}

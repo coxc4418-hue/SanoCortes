@@ -1,6 +1,6 @@
 // SanoCortes — Ventana de cobro reutilizable (pagos mixtos, abonos y vuelto) en la moneda del país
 import { store } from './store.js';
-import { openModal, toast, num, esc, parseNum, setBusy, usd, PAY_METHODS, round2, loc, flagImg } from './utils.js';
+import { openModal, toast, num, esc, parseNum, setBusy, usd, bs, PAY_METHODS, round2, loc, flagImg } from './utils.js';
 import { icon } from './icons.js';
 
 const prefPrint = () => { try { return localStorage.getItem('sc_print') !== '0'; } catch (_) { return true; } };
@@ -78,14 +78,14 @@ export function openPay(opts) {
 
     function renderStatus() {
       const t = total();
-      $('[data-total]').textContent = usd(t);
+      $('[data-total]').innerHTML = `${usd(t)}${bs(t) ? `<small class="pay-fx">${bs(t)}</small>` : ''}`;
       $('[data-breakdown]').textContent = opts.breakdown ? opts.breakdown(st) : (opts.discount && st.discount ? `Total ${usd(base)} · Descuento −${usd(st.discount)}` : '');
       const diff = round2(paidUSD() - t);
       const stEl = $('[data-status]');
       if (t <= 0.004) { stEl.className = 'pay-status ok'; stEl.innerHTML = `<span>${icon('check')} Nada por cobrar</span><span></span>`; }
       else if (!st.pays.length) { stEl.className = 'pay-status due'; stEl.innerHTML = `<span>Elige una forma de pago</span><span>${usd(t)}</span>`; }
-      else if (diff < -0.009) { stEl.className = 'pay-status due'; stEl.innerHTML = `<span>Falta</span><span class="num">${usd(-diff)}</span>`; }
-      else { stEl.className = 'pay-status ok'; stEl.innerHTML = diff > 0.009 ? `<span>Vuelto</span><span class="num">${usd(diff)}</span>` : `<span>${icon('check')} Pago completo</span><span></span>`; }
+      else if (diff < -0.009) { stEl.className = 'pay-status due'; stEl.innerHTML = `<span>Falta</span><span class="num">${usd(-diff)}${bs(-diff) ? ` · ${bs(-diff)}` : ''}</span>`; }
+      else { stEl.className = 'pay-status ok'; stEl.innerHTML = diff > 0.009 ? `<span>Vuelto</span><span class="num">${usd(diff)}${bs(diff) ? ` · ${bs(diff)}` : ''}</span>` : `<span>${icon('check')} Pago completo</span><span></span>`; }
       $('[data-ok]').innerHTML = `${icon('check')} ${esc(opts.confirmText || 'Cobrar')} ${t > 0.004 ? usd(t) : ''}`;
     }
 

@@ -79,7 +79,7 @@ function paymentFields(pay) {
   return {
     rate: 1, payments: pay.pays, paidUSD: pay.paidUSD, changeUSD: pay.changeUSD, changeCurrency: 'USD',
     method: pay.pays.length === 1 ? pay.pays[0].method : pay.pays.length ? 'mixto' : 'ninguno', received: pay.received,
-    shiftId: pay.shift?.id || null, cashFlow: pay.flow
+    shiftId: pay.shift?.id || null, cashFlow: pay.flow, fxRate: Number(store.settings.fx?.enabled ? store.settings.fx.rate : 0) || 0
   };
 }
 export function clientFields(c) {
