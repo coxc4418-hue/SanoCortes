@@ -8,7 +8,7 @@ import { rateChip, startBcv } from './bcv.js';
 import { openCountryPicker, salesWa, SALES_PHONE_FMT } from './shared.js';
 import { isStandalone, platform, bindInstallButtons } from './install.js';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.1';
 
 const ROUTES = {
   inicio: { title: 'Inicio', icon: 'home', group: 'Barbería', load: () => import('./views/dashboard.js') },
@@ -244,7 +244,7 @@ async function ensureCountry() {
 }
 /** Enlace de reservas: se crea solo la primera vez (nombre-de-la-barberia-xxxx) */
 async function ensureBookingSlug() {
-  if (store.settings.booking?.slug || session.isSuper) return;
+  if (store.settings.booking?.slug) return;
   const { slugify, genCode } = await import('./ops.js');
   const slug = `${slugify(store.businessName)}-${genCode(4).toLowerCase()}`;
   await store.saveSettings({ booking: { ...store.settings.booking, slug } }).catch(() => {});
@@ -259,11 +259,10 @@ async function afterEnter() {
 let pubOff = null;
 function startPublisher() {
   pubOff?.();
-  if (session.isSuper && !store.isDemo) return;
   import('./ops.js').then(({ publishBooking, resetPublished }) => {
     resetPublished();
     const run = debounce(() => publishBooking().catch((e) => console.warn('[reservas]', e?.code || e)), 2500);
-    run();
+    publishBooking().catch((e) => console.warn('[reservas]', e?.code || e));
     const offs = [store.on('appointments', run), store.on('settings', run)];
     const iv = setInterval(run, 10 * 60000);
     pubOff = () => { offs.forEach((o) => o()); clearInterval(iv); pubOff = null; };
