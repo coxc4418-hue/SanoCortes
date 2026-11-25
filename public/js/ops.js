@@ -425,10 +425,10 @@ export async function publishBooking({ force = false } = {}) {
   const d = bookingDoc();
   const key = JSON.stringify({ ...d, updatedAt: '' });
   if (!force && key === lastPublished) return false;
-  lastPublished = key;
   const b = store.batch();
   b.set(store.bookingRef(B.slug), d);
   await store.commit(b);
+  lastPublished = key;
   return true;
 }
 export function resetPublished() { lastPublished = ''; }

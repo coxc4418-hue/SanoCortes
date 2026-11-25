@@ -261,9 +261,12 @@ function startPublisher() {
   pubOff?.();
   import('./ops.js').then(({ publishBooking, resetPublished }) => {
     resetPublished();
-    const run = debounce(() => publishBooking().catch((e) => console.warn('[reservas]', e?.code || e)), 2500);
-    publishBooking().catch((e) => console.warn('[reservas]', e?.code || e));
-    const offs = [store.on('appointments', run), store.on('settings', run)];
+    let didFirst = false;
+    const fire = () => publishBooking().then((ok) => { if (ok) didFirst = true; }).catch((e) => console.warn('[reservas]', e?.code || e));
+    const run = debounce(fire, 1200);
+    const onChange = () => { if (!didFirst) fire(); else run(); };
+    fire();
+    const offs = [store.on('appointments', onChange), store.on('settings', onChange)];
     const iv = setInterval(run, 10 * 60000);
     pubOff = () => { offs.forEach((o) => o()); clearInterval(iv); pubOff = null; };
   });
